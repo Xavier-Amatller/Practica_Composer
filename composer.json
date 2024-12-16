@@ -1,0 +1,20 @@
+{
+    "name": "xavier/proyecto",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Src\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Xavier-Amatller",
+            "email": "reyo2004@gmail.com"
+        }
+    ],
+    "require": {
+        "intervention/image": "^3.9",
+        "monolog/monolog": "^3.8",
+        "ramsey/uuid": "^4.7"
+    }
+}
