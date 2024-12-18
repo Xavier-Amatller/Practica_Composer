@@ -1,8 +1,9 @@
 <?php
-// namespace App\Controller;
-// require_once __DIR__ . '/../../vendor/autoload.php';
+ namespace Src\Controller;
+ require_once  '../../vendor/autoload.php';
 
-require_once "../Service/ServiceReparation.php";
+ use Src\Service\ServiceReparation;
+
 final class ControllerReparation
 {
     function getReparation($uuid)
@@ -15,7 +16,7 @@ final class ControllerReparation
     function setReparation($idWorkshop, $workshopName, $license) {
         $reparationService = new ServiceReparation();
         $reparationService->conexion();
-        return $reparationService->setReparation($idWorkshop, $workshopName, $license);
+        return $reparationService->insertReparation($idWorkshop, $workshopName, $license);
     }
 }
 

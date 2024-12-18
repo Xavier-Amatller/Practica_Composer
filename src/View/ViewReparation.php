@@ -1,7 +1,15 @@
 <?php
-// require_once __DIR__ . '/../../vendor/autoload.php';
-// use App\Controller;
-require_once "../Controller/ControllerReparation.php"
+
+namespace Src\View;
+
+require_once  '../../vendor/autoload.php';
+
+use Src\Controller\ControllerReparation;
+session_start();
+
+if(isset($_GET["rol"])){
+    $_SESSION["rol"] = $_GET["rol"];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,21 +47,22 @@ require_once "../Controller/ControllerReparation.php"
                     if (isset($_GET["uuid"])) {
                         $rc = new ControllerReparation();
                         $reparation = $rc->getReparation($_GET["uuid"]);
-                        if( $reparation->getUuid() === 0){
+
+                        if ($reparation == null) {
                             echo "<h1>No se ha encontrado la reparacion</h1>";
-                        }else{
+                        } else {
 
-                        $idWorkshop = $reparation->getIdWorkshop();
-                        $workshopName = $reparation->getNameWorkshop();
-                        $registerDate = $reparation->getRegisterDate();
-                        $license = $reparation->getLicense();
-                        $uuid = $reparation->getUuid();
+                            $idWorkshop = $reparation->getIdWorkshop();
+                            $workshopName = $reparation->getNameWorkshop();
+                            $registerDate = $reparation->getRegisterDate();
+                            $license = $reparation->getLicense();
+                            $uuid = $reparation->getUuid();
 
-                        echo "<td>$idWorkshop</td>";
-                        echo "<td>$workshopName</td>";
-                        echo "<td>$registerDate</td>";
-                        echo "<td>$license</td>";
-                        echo "<td>$uuid</td>";
+                            echo "<td>$idWorkshop</td>";
+                            echo "<td>$workshopName</td>";
+                            echo "<td>$registerDate</td>";
+                            echo "<td>$license</td>";
+                            echo "<td>$uuid</td>";
                         }
                     }
                     ?>
@@ -65,7 +74,7 @@ require_once "../Controller/ControllerReparation.php"
     </div>
     <div id="add-reparation">
         <?php
-        if (isset($_GET["rol"]) && $_GET["rol"] == "employee") {
+        if ($_SESSION["rol"] == "employee") {
             echo '<h1>ADD a new Reparation to the Database </h1>';
             echo '
                 <form action="" method="post">
@@ -76,12 +85,12 @@ require_once "../Controller/ControllerReparation.php"
                 </form>
             ';
             if (isset($_POST["idWorkshop"])) {
-                try{
-                $rc = new ControllerReparation();
-                $reparation = $rc->setReparation($_POST["idWorkshop"], $_POST["workshopName"], $_POST["license"]);
+                try {
+                    $rc = new ControllerReparation();
+                    $reparation = $rc->setReparation($_POST["idWorkshop"], $_POST["workshopName"], $_POST["license"]);
 
-                echo "<h1>Reparacion insertada correctamente</h1>";
-                }catch(Exception $e){
+                    echo "<h1>Reparacion insertada correctamente</h1>";
+                } catch (\Exception $e) {
                     echo "<h1>No se ha podido insertar la reparacion</h1>";
                     echo $e->getMessage();
                 }

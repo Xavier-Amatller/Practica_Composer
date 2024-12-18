@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Model;
+namespace Src\Model;
+require_once  '../../vendor/autoload.php';
 
 class Reparation
 {

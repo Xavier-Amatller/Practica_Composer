@@ -1,18 +1,26 @@
 <?php
 
-require __DIR__ . '/../../vendor/autoload.php';
+namespace Src\Service;
+
+require '../../vendor/autoload.php';
 // require_once "../Model/Reparation.php";
-use App\Model\Reparation;
+use Src\Model\Reparation;
 use Ramsey\Uuid\Uuid;
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use PDO;
 
 final class ServiceReparation
 {
-    function conexion(): PDO
-    {
+    private $log;
 
+    public function __construct()
+    {
+        $this->log = $this->monolog();
+    }
+    function conexion()
+    {
         $d = parse_ini_file('../../cfg/db_config.ini');
 
         $dsn = 'mysql:host=' . $d["host"] . ';dbname=' . $d["db_name"] . ';charset=utf8mb4';
@@ -22,25 +30,27 @@ final class ServiceReparation
         try {
             $conn = new PDO($dsn, $username, $password);
             // Configuración opcional: manejo de errores
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->monolog()->info("Conexion successfull");
+            $conn->setAttribute(PDO::ATTR_ERRMODE, value: PDO::ERRMODE_EXCEPTION);
+            $this->log->info("Conexion successfull");
             return $conn;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
+            $this->log->error("Conexion dennied. Erorr: " . $e->getMessage());
             die("Error de conexión: " . $e->getMessage());
         }
     }
 
-    function getReparation($uuid): Reparation | string
+    function getReparation($uuid): Reparation | null
     {
         $conn = $this->conexion();
 
         $query = "select * from Reparation where uuid = :uuid";
         $stmt = $conn->prepare($query);
-        $stmt->bindParam(':uuid', $uuid, PDO::PARAM_INT);
+        $stmt->bindParam(':uuid', $uuid, PDO::PARAM_STR);
         $stmt->execute();
 
         $reparation =  $stmt->fetch(PDO::FETCH_ASSOC);
         if ($reparation) {
+            $this->log->info("Get reparation successfull");
             return new Reparation(
                 $reparation["id_workshop"],
                 $reparation["name_workshop"],
@@ -49,10 +59,11 @@ final class ServiceReparation
                 $reparation["uuid"],
             );
         } else {
-            return new Reparation(0, 0, 0, 0, 0);
+            $this->log->info("Reparation not found.");
+            return null;
         }
     }
-    function setReparation($idWorkshop, $workshopName, $license): bool
+    function insertReparation($idWorkshop, $workshopName, $license): bool
     {
         $date = date("Y-m-d");
         $uuid = $this->generarUUID();
@@ -69,6 +80,8 @@ final class ServiceReparation
         $stmt->bindParam(':license', $license, PDO::PARAM_STR);
         $stmt->bindParam(':uuid', $uuid, PDO::PARAM_STR);
 
+        $this->log->info("Reparation inserted correctly.");
+
         return $stmt->execute();
     }
 
@@ -81,7 +94,6 @@ final class ServiceReparation
 
     function monolog()
     {
-
         // create log
         $log = new Logger("LogReparations");
         // define logs location
