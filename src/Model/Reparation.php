@@ -15,13 +15,17 @@ class Reparation
 
     private $uuid;
 
-    public function __construct($idWorkshop, $nameWorkshop, $registerDate, $license, $uuid)
+    private $image;
+
+    public function __construct($idWorkshop, $nameWorkshop, $registerDate, $license, $uuid, $image)
     {
         $this->idWorkshop = $idWorkshop;
         $this->nameWorkshop = $nameWorkshop;
         $this->registerDate = $registerDate;
         $this->license = $license;
         $this->uuid = $uuid;
+        $this->image = $image;
+
     }
 
     // Getter and Setter for idWorkshop
@@ -77,5 +81,23 @@ class Reparation
     public function setUuid($uuid)
     {
         $this->uuid = $uuid;
+    }
+
+    /**
+     * Get the value of image
+     */ 
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    /**
+     * Set the value of image
+     *
+     * @return  self
+     */ 
+    public function setImage($image): void
+    {
+        $this->image = $image;
     }
 }

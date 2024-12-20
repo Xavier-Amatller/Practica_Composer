@@ -13,10 +13,10 @@ final class ControllerReparation
         return $reparationService->getReparation($uuid);
     }
 
-    function setReparation($idWorkshop, $workshopName, $license) {
+    function setReparation($idWorkshop, $workshopName, $license, $image) {
         $reparationService = new ServiceReparation();
         $reparationService->conexion();
-        return $reparationService->insertReparation($idWorkshop, $workshopName, $license);
+        return $reparationService->insertReparation($idWorkshop, $workshopName, $license, $image);
     }
 }
 
