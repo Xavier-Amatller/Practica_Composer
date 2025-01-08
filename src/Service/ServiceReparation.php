@@ -3,7 +3,6 @@
 namespace Src\Service;
 
 require '../../vendor/autoload.php';
-// require_once "../Model/Reparation.php";
 use Src\Model\Reparation;
 use Ramsey\Uuid\Uuid;
 use Monolog\Level;
@@ -11,7 +10,7 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use PDO;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Imagick\Driver;
+use Intervention\Image\Typography\FontFactory;
 
 final class ServiceReparation
 {
@@ -21,7 +20,7 @@ final class ServiceReparation
     {
         $this->log = $this->monolog();
     }
-    function conexion()
+    private function conexion()
     {
         $d = parse_ini_file('../../cfg/db_config.ini');
 
@@ -41,7 +40,7 @@ final class ServiceReparation
         }
     }
 
-    function getReparation($uuid): Reparation | null
+    public function getReparation($uuid): Reparation | null
     {
         $conn = $this->conexion();
 
@@ -53,32 +52,27 @@ final class ServiceReparation
         $reparation =  $stmt->fetch(PDO::FETCH_ASSOC);
         if ($reparation) {
             $this->log->info("Get reparation successfull");
-            // return new Reparation(
-            //     $reparation["id_workshop"],
-            //     $reparation["name_workshop"],
-            //     $reparation["register_date"],
-            //     $reparation["license"],
-            //     $reparation["uuid"],
-            //     $reparation["image"]
-            // );
-            return processImageFromReparation(new Reparation(
+            $reparation = new Reparation(
                 $reparation["id_workshop"],
                 $reparation["name_workshop"],
                 $reparation["register_date"],
                 $reparation["license"],
                 $reparation["uuid"],
                 $reparation["image"]
-            ));
+            );
+            return ($_SESSION["rol"] == "client")
+                ? $this->pixelateImage($reparation)
+                : $reparation;
         } else {
             $this->log->info("Reparation not found.");
             return null;
         }
     }
-    function insertReparation($idWorkshop, $workshopName, $license, $image): bool
+    public function insertReparation($idWorkshop, $workshopName, $license, $image)
     {
         $date = date("Y-m-d");
         $uuid = $this->generarUUID();
-
+        $image = $this->addWatermark($uuid, $image);
         $conn = $this->conexion();
 
         $query = "insert into reparation(id_workshop,name_workshop,register_date,license,uuid,image)values
@@ -95,17 +89,18 @@ final class ServiceReparation
 
         $this->log->info("Reparation inserted correctly.");
 
-        return $stmt->execute();
+        $stmt->execute();
+        return $uuid;
     }
 
-    function generarUUID()
+    private function generarUUID()
     {
         $uuid = Uuid::uuid4();
 
         return $uuid->toString();
     }
 
-    function monolog()
+    private function monolog()
     {
         // create log
         $log = new Logger("LogReparations");
@@ -113,30 +108,40 @@ final class ServiceReparation
         $log->pushHandler(new StreamHandler("../Logs/Reparations.log", Level::Info));
         return $log;
     }
-}
-function processImageFromReparation(Reparation $reparation)
-{
-    $manager = ImageManager::gd();
+    private function pixelateImage(Reparation $reparation): Reparation
+    {
+        $manager = ImageManager::gd();
 
-    $image = $manager->read($reparation->getImage());
+        $image = $manager->read($reparation->getImage());
 
-    $image->text($reparation->getUuid(), 10, 10, function ($font) {
-        $font->size(20);
-        $font->color('#ffffff');
-        $font->align('left');
-        $font->valign('top');
-    });
-
-    $zonaPixelar = $image->crop(100, 100, 50, 50)
-        ->resize(10, 10)
-        ->resize(100, 100);
-    $image->place($zonaPixelar, 'top-left', 50, 50);
-
+        $image = $image->pixelate(100);
 
         // Convierte la imagen a base64
-        $encoded = $image->encode(); // Intervention\Image\EncodedImage
+        $encoded = $image->encode();
 
         // Establece la imagen codificada en base64 en el objeto Reparation
         $reparation->setImage($encoded);
-    return $reparation;
+
+        return $reparation;
+    }
+
+    private function addWatermark($text, $image)
+    {
+        $manager = ImageManager::gd();
+
+        $image = $manager->read($image);
+
+        $image->resize(300, 300);
+
+        $image->text($text, 120, 100, function (FontFactory $font) {
+            $font->size(20);
+            $font->color('black');
+            $font->align('middle');
+            $font->valign('top');
+            $font->lineHeight(1.6);
+            $font->angle(10);
+        });
+
+        return  $image->encode();
+    }
 }

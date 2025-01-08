@@ -82,9 +82,9 @@ if (isset($_GET["rol"])) {
             echo '<h1>ADD a new Reparation to the Database </h1>';
             echo '
                 <form action="" method="post" enctype="multipart/form-data">
-                    <input type="text" name="idWorkshop" placeholder="idWorkshop" required>
-                    <input type="text" name="workshopName" placeholder="workshopName" required>
-                    <input type="text" name="license" placeholder="license" required>
+                    <input type="text" name="idWorkshop" placeholder="idWorkshop" pattern="^\d{4}$" required>
+                    <input type="text" name="workshopName" placeholder="workshopName" pattern="^[a-zA-Z\s]{1,12}$" required>
+                    <input type="text" name="license" placeholder="license" pattern="^\d{4}-[A-Z]{3}$" required>
                     <input type="file" name="image" accept="image/*" required>
                     <input type="submit" name="submit" id="submit" value="Submit" required>
                 </form>
@@ -94,9 +94,11 @@ if (isset($_GET["rol"])) {
                     $rc = new ControllerReparation();
                     $imageName = $_FILES['image']['name'];
                     $imageData = file_get_contents($_FILES['image']['tmp_name']);
-                    $reparation = $rc->setReparation($_POST["idWorkshop"], $_POST["workshopName"], $_POST["license"], $imageData);
+                    $reparationUuid = $rc->setReparation($_POST["idWorkshop"], $_POST["workshopName"], $_POST["license"], $imageData);
 
                     echo "<h1>Reparacion insertada correctamente</h1>";
+                    echo "<h2 >$reparationUuid</h2>";
+
                 } catch (\Exception $e) {
                     echo "<h1>No se ha podido insertar la reparacion</h1>";
                     echo $e->getMessage();

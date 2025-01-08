@@ -9,7 +9,7 @@ body {
 }
 
 /* Títulos */
-h1 {
+h1,h2 {
     text-align: center;
     color: #555;
     margin-top: 20px;
