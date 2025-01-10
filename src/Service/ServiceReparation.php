@@ -3,6 +3,8 @@
 namespace Src\Service;
 
 require '../../vendor/autoload.php';
+
+use Exception;
 use Src\Model\Reparation;
 use Ramsey\Uuid\Uuid;
 use Monolog\Level;
@@ -74,23 +76,27 @@ final class ServiceReparation
         $uuid = $this->generarUUID();
         $image = $this->addWatermark($uuid, $image);
         $conn = $this->conexion();
+        try {
+            $query = "insert into reparation(id_workshop,name_workshop,register_date,license,uuid,image)values
+            (:idWorkshop, :workshopName, :registerDate, :license , :uuid, :image)";
 
-        $query = "insert into reparation(id_workshop,name_workshop,register_date,license,uuid,image)values
-                    (:idWorkshop, :workshopName, :registerDate, :license , :uuid, :image)";
-
-        $stmt = $conn->prepare($query);
-        $stmt->bindParam(':idWorkshop', $idWorkshop, PDO::PARAM_STR);
-        $stmt->bindParam(':workshopName', $workshopName, PDO::PARAM_STR);
-        $stmt->bindParam(':registerDate', $date, PDO::PARAM_STR);
-        $stmt->bindParam(':license', $license, PDO::PARAM_STR);
-        $stmt->bindParam(':uuid', $uuid, PDO::PARAM_STR);
-        $stmt->bindParam(':image', $image, PDO::PARAM_LOB);
+            $stmt = $conn->prepare($query);
+            $stmt->bindParam(':idWorkshop', $idWorkshop, PDO::PARAM_STR);
+            $stmt->bindParam(':workshopName', $workshopName, PDO::PARAM_STR);
+            $stmt->bindParam(':registerDate', $date, PDO::PARAM_STR);
+            $stmt->bindParam(':license', $license, PDO::PARAM_STR);
+            $stmt->bindParam(':uuid', $uuid, PDO::PARAM_STR);
+            $stmt->bindParam(':image', $image, PDO::PARAM_LOB);
 
 
-        $this->log->info("Reparation inserted correctly.");
+            $this->log->info("Reparation inserted correctly.");
 
-        $stmt->execute();
-        return $uuid;
+            $stmt->execute();
+            return $uuid;
+        } catch (Exception $e) {
+            $this->log->warning(" Couldn't insert. warning: " . $e->getMessage());
+            throw new Exception("No se ha podido insertar. Exception:" . $e->getMessage());
+        }
     }
 
     private function generarUUID()
